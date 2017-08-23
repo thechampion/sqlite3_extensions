@@ -31,13 +31,20 @@ make_hash_func(sha512_func, SHA512, SHA512_DIGEST_LENGTH);
 
 int sqlite3_hashlib_init(sqlite3* db, char** pzErrMsg, const sqlite3_api_routines* pApi)
 {
+	typedef struct {
+		const char* name;
+		void (*ptr)(sqlite3_context*, int, sqlite3_value**);
+	} Function;
+	const Function functions[] = {{"md5", md5_func}, {"sha1", sha1_func},
+		{"sha224", sha224_func}, {"sha256", sha256_func}, {"sha384", sha384_func}, {"sha512", sha512_func}};
+
 	int rc = SQLITE_OK;
 	SQLITE_EXTENSION_INIT2(pApi);
-	sqlite3_create_function(db, "md5", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, md5_func, 0, 0);
-	sqlite3_create_function(db, "sha1", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, sha1_func, 0, 0);
-	sqlite3_create_function(db, "sha224", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, sha224_func, 0, 0);
-	sqlite3_create_function(db, "sha256", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, sha256_func, 0, 0);
-	sqlite3_create_function(db, "sha384", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, sha384_func, 0, 0);
-	sqlite3_create_function(db, "sha512", 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, sha512_func, 0, 0);
+	for(const Function* fn = functions; fn != functions + sizeof(functions) / sizeof(functions[0]); ++fn)
+	{
+		rc = sqlite3_create_function(db, fn->name, 1, SQLITE_UTF8 | SQLITE_DETERMINISTIC, 0, fn->ptr, 0, 0);
+		if(rc != SQLITE_OK)
+			break;
+	}
 	return rc;
 }
