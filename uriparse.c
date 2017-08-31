@@ -1,7 +1,6 @@
-#include <stdio.h>
 #include <string.h>
 
-#include <Uri.h>
+#include <uriparser/Uri.h>
 
 #include <sqlite3ext.h>
 SQLITE_EXTENSION_INIT1
